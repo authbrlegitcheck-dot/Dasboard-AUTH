@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 96%; /* Neutral light gray */
+    --foreground: 28 18% 16%;
+
+    --card: 0 0% 100%; /* Pure white for contrast against off-white */
+    --card-foreground: 28 18% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 28 18% 16%;
+
+    --primary: 25 26% 22%;
+    --primary-foreground: 42 32% 98%;
+
+    --secondary: 38 16% 92%;
+    --secondary-foreground: 28 18% 18%;
+
+    --muted: 38 14% 92%;
+    --muted-foreground: 28 10% 42%;
+
+    --accent: 38 18% 90%;
+    --accent-foreground: 28 18% 16%;
+
+    --destructive: 12 55% 42%;
+    --destructive-foreground: 42 32% 98%;
+
+    --success: 145 14% 36%;
+    --success-foreground: 42 32% 98%;
+
+    --border: 34 12% 86%;
+    --input: 34 12% 86%;
+    --ring: 28 16% 40%;
+
+    --radius: 0.5rem;
+
+    --metric-revenue: 145 16% 34%;
+    --metric-volume: 28 12% 40%;
+    --metric-insight: 32 14% 48%;
+
+    --gold: 28 10% 38%;
+    --chart-1: 25 22% 28%;
+    --chart-2: 28 12% 42%;
+    --chart-3: 32 8% 55%;
+    --chart-4: 36 10% 70%;
+
+    --wordmark-stroke: 28 14% 30%;
+
+    --gradient-gold: linear-gradient(165deg, hsl(42 28% 99%), hsl(38 18% 93%));
+    --gradient-dark: linear-gradient(180deg, hsl(42 26% 98%), hsl(40 20% 94%));
+    --shadow-glow: 0 1px 0 hsl(35 12% 88% / 0.9);
+    --transition-smooth: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .dark {
+    --background: 25 12% 10%;
+    --foreground: 40 18% 92%;
+
+    --card: 25 10% 13%;
+    --card-foreground: 40 18% 92%;
+
+    --popover: 25 10% 13%;
+    --popover-foreground: 40 18% 92%;
+
+    --primary: 38 22% 88%;
+    --primary-foreground: 25 22% 12%;
+
+    --secondary: 25 8% 18%;
+    --secondary-foreground: 40 18% 92%;
+
+    --muted: 25 8% 18%;
+    --muted-foreground: 35 12% 62%;
+
+    --accent: 25 8% 20%;
+    --accent-foreground: 40 18% 92%;
+
+    --destructive: 8 48% 48%;
+    --destructive-foreground: 40 18% 98%;
+
+    --success: 145 18% 42%;
+    --success-foreground: 25 12% 10%;
+
+    --border: 25 8% 22%;
+    --input: 25 8% 22%;
+    --ring: 38 20% 70%;
+
+    --metric-revenue: 145 20% 48%;
+    --metric-volume: 32 12% 58%;
+    --metric-insight: 28 10% 62%;
+
+    --gold: 35 12% 72%;
+    --chart-1: 38 16% 78%;
+    --chart-2: 32 10% 58%;
+    --chart-3: 28 8% 45%;
+    --chart-4: 25 8% 32%;
+
+    --wordmark-stroke: 40 20% 88%;
+
+    --gradient-gold: linear-gradient(165deg, hsl(25 10% 14%), hsl(25 12% 10%));
+    --gradient-dark: linear-gradient(180deg, hsl(25 10% 13%), hsl(25 12% 9%));
+    --shadow-glow: 0 1px 0 hsl(0 0% 100% / 0.06);
+  }
+}
+
+@layer components {
+  /* Mobile-first touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Better tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    /* Prevent font size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased font-sans leading-relaxed;
+    font-size: 16px; /* base 16px on mobile for accessibility */
+    /* Smooth scroll */
+    scroll-behavior: smooth;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-sans font-semibold tracking-tight text-foreground;
+    /* Use display weight for headings */
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  /* Improve input UX on mobile — prevent zoom on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Scrollable containers on mobile */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

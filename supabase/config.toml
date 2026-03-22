@@ -1,0 +1,4 @@
+project_id = "lewnoaipvawvtehxoptz"
+
+[functions.process-expired-ca]
+verify_jwt = false
