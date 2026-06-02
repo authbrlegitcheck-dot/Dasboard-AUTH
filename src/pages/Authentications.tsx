@@ -86,6 +86,7 @@ const Authentications = () => {
     item_category: "roupa" as "roupa" | "tenis_calcados" | "personalizado",
     custom_price: "",
     use_ca_credit: false,
+    delivery_time: "1h" as "1h" | "30min",
   });
 
   const [customerCABalance, setCustomerCABalance] = useState<number>(0);
@@ -155,7 +156,10 @@ const Authentications = () => {
     if (formData.item_category === "personalizado") {
       return parseFloat(formData.custom_price) || 0;
     }
-    return formData.item_category === "tenis_calcados" ? 25 : 18;
+    if (formData.item_category === "tenis_calcados") {
+      return formData.delivery_time === "30min" ? 28 : 25;
+    }
+    return formData.delivery_time === "30min" ? 21 : 18;
   };
 
   const ensureCustomerExists = async (requesterName: string): Promise<string | null> => {
@@ -359,6 +363,7 @@ const Authentications = () => {
         item_category: "roupa",
         custom_price: "",
         use_ca_credit: false,
+        delivery_time: "1h",
       });
       setCustomerCABalance(0);
       fetchAuthentications();
@@ -1067,10 +1072,10 @@ const Authentications = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="roupa">
-                          Roupa (R$ 18,00)
+                          Roupa (R$ 18 / R$ 21)
                         </SelectItem>
                         <SelectItem value="tenis_calcados">
-                          Tênis/Calçados (R$ 25,00)
+                          Tênis/Calçados (R$ 25 / R$ 28)
                         </SelectItem>
                         <SelectItem value="personalizado">
                           Preço Personalizado
@@ -1079,6 +1084,30 @@ const Authentications = () => {
                     </Select>
                   </div>
                 </div>
+
+                {formData.item_category !== "personalizado" && (
+                  <div>
+                    <Label htmlFor="delivery_time">Prazo de Entrega</Label>
+                    <Select
+                      value={formData.delivery_time}
+                      onValueChange={(value: "1h" | "30min") =>
+                        setFormData({ ...formData, delivery_time: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1h">
+                          1 hora — R$ {formData.item_category === "tenis_calcados" ? "25,00" : "18,00"}
+                        </SelectItem>
+                        <SelectItem value="30min">
+                          30 minutos — R$ {formData.item_category === "tenis_calcados" ? "28,00" : "21,00"}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {formData.item_category === "personalizado" && (
                   <div>
