@@ -171,9 +171,10 @@ const MRR = () => {
             ? 100
             : 0;
 
+      const last6Months = sortedData.slice(-6);
       const avgMRR =
-        sortedData.length > 0
-          ? sortedData.reduce((sum, d) => sum + d.totalRevenue, 0) / sortedData.length
+        last6Months.length > 0
+          ? last6Months.reduce((sum, d) => sum + d.totalRevenue, 0) / last6Months.length
           : 0;
       const regularMRR = currentData?.regularRevenue || 0;
       const partnerMRR = currentData?.partnerRevenue || 0;
@@ -266,7 +267,7 @@ const MRR = () => {
           <MetricCard
             title="MRR médio"
             value={`R$ ${metrics.avgMRR.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            subtitle="Média simples da receita por mês com dados"
+            subtitle="Média dos últimos 6 meses"
             icon={TrendingUp}
             accent="insight"
           />
