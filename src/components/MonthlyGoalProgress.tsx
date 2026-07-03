@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Target, TrendingUp, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { nowBrasilia, currentMonthBrasilia } from "@/lib/dateUtils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -28,14 +29,11 @@ const MonthlyGoalProgress = () => {
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       const nextMonthDate = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
 
-      // Fetch current month authentications
-      const { data: authData, error: authError } = await supabase
-        .from("authentications")
-        .select("*")
-        .gte("date", `${currentMonth}-01`)
-        .lt("date", nextMonthDate);
+      // Fetch current month authentications (with pagination)
+      const authData = await fetchAllRows("authentications", "id", (q) =>
+        q.gte("date", `${currentMonth}-01`).lt("date", nextMonthDate)
+      );
 
-      if (authError) throw authError;
       setCurrentAuthentications(authData?.length || 0);
 
       // Fetch monthly target

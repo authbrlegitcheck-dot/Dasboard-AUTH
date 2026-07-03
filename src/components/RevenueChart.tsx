@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, startOfMonth, subMonths } from "date-fns";
@@ -12,16 +13,13 @@ export const RevenueChart = () => {
     queryKey: ["revenue-chart"],
     queryFn: async () => {
       const sixMonthsAgo = subMonths(startOfMonth(nowBrasilia()), 5);
+      const cutoff = sixMonthsAgo.toISOString();
       
-      const { data, error } = await supabase
-        .from("authentications")
-        .select("date, price")
-        .gte("date", sixMonthsAgo.toISOString())
-        .order("date");
+      const data = await fetchAllRows("authentications", "date, price", (q) =>
+        q.gte("date", cutoff).order("date")
+      );
 
-      if (error) throw error;
-
-      const monthlyData = data?.reduce((acc: any[], auth) => {
+      const monthlyData = data?.reduce((acc: any[], auth: any) => {
         const monthKey = format(new Date(auth.date), "MMM/yy", { locale: ptBR });
         const existing = acc.find(item => item.month === monthKey);
         

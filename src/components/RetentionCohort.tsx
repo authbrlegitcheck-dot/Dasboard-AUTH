@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { yearMonthKeyBrasilia } from "@/lib/dateUtils";
 
 interface CohortData {
@@ -16,9 +17,11 @@ export function RetentionCohort() {
   useEffect(() => {
     async function fetchCohorts() {
       try {
-        const { data: auths } = await supabase.from("authentications").select("customer_id, requester_name, date").order("date", { ascending: true });
+        const auths = await fetchAllRows("authentications", "customer_id, requester_name, date", (q) =>
+          q.order("date", { ascending: true })
+        );
         
-        if (!auths) return;
+        if (!auths || auths.length === 0) return;
 
         // Group by customer (using customer_id or requester_name)
         const customerFirstSeen = new Map<string, string>(); // customer key -> first month (YYYY-MM)

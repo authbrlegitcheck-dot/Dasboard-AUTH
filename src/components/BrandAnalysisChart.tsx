@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import {
   Bar,
   BarChart,
@@ -27,7 +28,7 @@ export function BrandAnalysisChart() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: auths } = await supabase.from("authentications").select("brand, result");
+        const auths = await fetchAllRows("authentications", "brand, result");
 
         const brandMap = new Map<string, BrandStats>();
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { format, subMonths, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -30,8 +31,10 @@ export function FinancialDRE() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: auths } = await supabase.from("authentications").select("price, date");
-        const { data: invs } = await supabase.from("investments").select("amount, date");
+        const [auths, invs] = await Promise.all([
+          fetchAllRows("authentications", "price, date"),
+          fetchAllRows("investments", "amount, date"),
+        ]);
 
         const monthlyMap = new Map<string, MonthlyFinancials>();
 

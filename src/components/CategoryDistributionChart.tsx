@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { Tag } from "lucide-react";
@@ -15,13 +16,9 @@ export const CategoryDistributionChart = () => {
   const { data: chartData, isLoading } = useQuery({
     queryKey: ["category-distribution"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("authentications")
-        .select("item_category");
+      const data = await fetchAllRows("authentications", "item_category");
 
-      if (error) throw error;
-
-      const categories = data?.reduce((acc: any[], item) => {
+      const categories = data?.reduce((acc: any[], item: any) => {
         const categoryMap: any = {
           "roupa": "Roupas",
           "tenis_calcados": "Tênis/Calçados",

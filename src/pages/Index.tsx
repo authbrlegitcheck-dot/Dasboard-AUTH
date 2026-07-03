@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
 import GoalsChecklist from "@/components/GoalsChecklist";
@@ -81,12 +82,10 @@ const Index = () => {
 
   const fetchMetrics = async () => {
     try {
-      const { data: authentications, error } = await supabase.from("authentications").select("*");
-
-      if (error) throw error;
+      const authentications = await fetchAllRows("authentications", "*");
 
       const total = authentications?.length || 0;
-      const totalRevenue = authentications?.reduce((sum, auth) => sum + Number(auth.price), 0) || 0;
+      const totalRevenue = authentications?.reduce((sum: number, auth: any) => sum + Number(auth.price), 0) || 0;
 
       const todayStr = formatDateBrasilia(new Date(), "yyyy-MM-dd");
       const currentYM = currentMonthBrasilia();
@@ -171,9 +170,9 @@ const Index = () => {
       const regularRevenue = regularAuths.reduce((sum, auth) => sum + Number(auth.price), 0);
       const avgTicketOperacional = regularTotal > 0 ? regularRevenue / regularTotal : 0;
 
-      const { data: caPurchases } = await supabase.from("ca_purchases").select("price_paid");
+      const caPurchases = await fetchAllRows("ca_purchases", "price_paid");
 
-      const caRevenue = caPurchases?.reduce((sum, p) => sum + Number(p.price_paid), 0) || 0;
+      const caRevenue = caPurchases?.reduce((sum: number, p: any) => sum + Number(p.price_paid), 0) || 0;
       const caCount = caPurchases?.length || 0;
 
       const avulsasComercial =

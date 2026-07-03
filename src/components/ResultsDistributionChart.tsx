@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from "recharts";
 import { useState, useCallback } from "react";
@@ -44,14 +45,10 @@ export const ResultsDistributionChart = () => {
   const { data: chartData, isLoading } = useQuery({
     queryKey: ["results-distribution"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("authentications")
-        .select("result");
+      const data = await fetchAllRows("authentications", "result");
 
-      if (error) throw error;
-
-      const auth = data?.filter(item => item.result === "AUTH").length || 0;
-      const replica = data?.filter(item => item.result === "RÉPLICA").length || 0;
+      const auth = data?.filter((item: any) => item.result === "AUTH").length || 0;
+      const replica = data?.filter((item: any) => item.result === "RÉPLICA").length || 0;
 
       return [
         { name: "Autêntico", value: auth, color: "hsl(var(--success))" },
