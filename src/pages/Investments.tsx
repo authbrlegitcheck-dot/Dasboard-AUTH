@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { todayBrasiliaISO, nowBrasilia } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,12 +112,10 @@ const Investments = () => {
 
   const fetchInvestments = async () => {
     try {
-      const { data, error } = await supabase
-        .from("investments")
-        .select("*")
-        .order("date", { ascending: false });
+      const data = await fetchAllRows("investments", "*", (q) => 
+        q.order("date", { ascending: false })
+      );
 
-      if (error) throw error;
       setInvestments(data || []);
     } finally {
       setLoading(false);

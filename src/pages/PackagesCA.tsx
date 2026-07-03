@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { nowBrasilia } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -209,12 +210,10 @@ const [editingPurchase, setEditingPurchase] = useState<CAPurchase | null>(null);
   };
 
   const fetchCustomers = async () => {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("id, name, ca_balance")
-      .order("name");
-
-    if (error) {
+    try {
+      const data = await fetchAllRows("customers", "id, name, ca_balance", (q) => q.order("name"));
+      setCustomers(data || []);
+    } catch (error: any) {
       toast({
         title: "Erro ao carregar clientes",
         description: error.message,
@@ -226,28 +225,20 @@ const [editingPurchase, setEditingPurchase] = useState<CAPurchase | null>(null);
   };
 
   const fetchPurchases = async () => {
-    const { data: purchasesData, error: purchasesError } = await supabase
-      .from("ca_purchases")
-      .select("*")
-      .order("purchase_date", { ascending: false });
-
-    if (purchasesError) {
+    try {
+      const purchasesData = await fetchAllRows("ca_purchases", "*", (q) => q.order("purchase_date", { ascending: false }));
+    } catch (error: any) {
       toast({
         title: "Erro ao carregar compras",
-        description: purchasesError.message,
+        description: error.message,
         variant: "destructive",
       });
       return;
     }
 
     // Fetch related data
-    const { data: customersData } = await supabase
-      .from("customers")
-      .select("id, name, ca_balance");
-
-    const { data: packagesData } = await supabase
-      .from("ca_packages")
-      .select("*");
+    const customersData = await fetchAllRows("customers", "id, name, ca_balance");
+    const packagesData = await fetchAllRows("ca_packages", "*");
 
     const enrichedPurchases = (purchasesData || []).map((purchase) => ({
       ...purchase,
@@ -274,9 +265,7 @@ const [editingPurchase, setEditingPurchase] = useState<CAPurchase | null>(null);
       return;
     }
 
-    const { data: customersData } = await supabase
-      .from("customers")
-      .select("id, name, ca_balance");
+    const customersData = await fetchAllRows("customers", "id, name, ca_balance");
 
     const enrichedTransactions = (transactionsData || []).map((tx) => ({
       ...tx,

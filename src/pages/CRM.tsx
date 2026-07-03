@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { currentMonthBrasilia, formatDateBrasiliaOptions, dateKeyBrasilia } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import { RetentionCohort } from "@/components/RetentionCohort";
 import { Button } from "@/components/ui/button";
@@ -170,11 +171,7 @@ const CRM = () => {
 
   const fetchInvestments = async () => {
     try {
-      const { data: investmentsData, error } = await supabase
-        .from("investments")
-        .select("amount, date, category");
-
-      if (error) throw error;
+      const investmentsData = await fetchAllRows("investments", "amount, date, category");
 
       const total = investmentsData?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
       const marketingTotal = investmentsData
@@ -197,18 +194,14 @@ const CRM = () => {
   const syncCustomersFromAuthentications = async () => {
     try {
       // Get all unique requester names from authentications
-      const { data: authentications } = await supabase
-        .from("authentications")
-        .select("requester_name");
+      const authentications = await fetchAllRows("authentications", "requester_name");
 
       if (!authentications) return;
 
       const uniqueRequesters = [...new Set(authentications.map(a => a.requester_name))];
 
       // Get all existing customer names
-      const { data: existingCustomers } = await supabase
-        .from("customers")
-        .select("name");
+      const existingCustomers = await fetchAllRows("customers", "name");
 
       const existingNames = new Set(existingCustomers?.map(c => c.name) || []);
 
@@ -228,18 +221,9 @@ const CRM = () => {
 
   const fetchCustomers = async () => {
     try {
-      const { data: customersData, error: customersError } = await supabase
-        .from("customers")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const customersData = await fetchAllRows("customers", "*", (q) => q.order("created_at", { ascending: false }));
 
-      if (customersError) throw customersError;
-
-      const { data: authenticationsData, error: authError } = await supabase
-        .from("authentications")
-        .select("*");
-
-      if (authError) throw authError;
+      const authenticationsData = await fetchAllRows("authentications", "*");
 
       // Set total authentications count and revenue directly from the database (same as Index.tsx)
       setTotalAuthenticationsCount(authenticationsData?.length || 0);
@@ -316,9 +300,7 @@ const CRM = () => {
       const currentMonthRev = currentMonthAuths.reduce((sum, auth) => sum + Number(auth.price), 0);
       
       // Fetch current month investments
-      const { data: investmentsData } = await supabase
-        .from("investments")
-        .select("amount, date, category");
+      const investmentsData = await fetchAllRows("investments", "amount, date, category");
       
       const monthlyInv = investmentsData?.filter(inv => inv.date.startsWith(currentMonth)) || [];
       const monthlyInvTotal = monthlyInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
@@ -432,13 +414,10 @@ const CRM = () => {
     setIsViewDialogOpen(true);
 
     try {
-      const { data, error } = await supabase
-        .from("authentications")
-        .select("*")
-        .eq("customer_id", customer.id)
-        .order("date", { ascending: false });
+      const data = await fetchAllRows("authentications", "*", (q) => 
+        q.eq("customer_id", customer.id).order("date", { ascending: false })
+      );
 
-      if (error) throw error;
       setCustomerHistory(data || []);
     } catch (error: any) {
       toast({

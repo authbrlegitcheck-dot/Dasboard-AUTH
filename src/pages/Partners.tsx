@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { nowBrasiliaDatetimeLocal, formatDateTimeBrasilia } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
@@ -139,12 +140,7 @@ const Partners = () => {
 
   const fetchStores = async () => {
     try {
-      const { data, error } = await supabase
-        .from("partner_stores")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await fetchAllRows("partner_stores", "*", (q) => q.order("created_at", { ascending: false }));
       setStores(data || []);
     } finally {
       setLoading(false);
@@ -152,17 +148,14 @@ const Partners = () => {
   };
 
   const fetchStoreAuths = async (storeId: string) => {
-    const { data, error } = await supabase
-      .from("authentications")
-      .select("*")
-      .eq("partner_store_id", storeId)
-      .order("code", { ascending: false });
-
-    if (error) {
+    try {
+      const data = await fetchAllRows("authentications", "*", (q) => 
+        q.eq("partner_store_id", storeId).order("code", { ascending: false })
+      );
+      setStoreAuths(data || []);
+    } catch (error) {
       toast({ title: "Erro ao carregar autenticações", variant: "destructive" });
-      return;
     }
-    setStoreAuths(data || []);
   };
 
   const handleCreateStore = async () => {
@@ -239,17 +232,14 @@ const Partners = () => {
   };
 
   const fetchCreditsHistory = async (storeId: string) => {
-    const { data, error } = await supabase
-      .from("partner_credits_history")
-      .select("*")
-      .eq("partner_store_id", storeId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const data = await fetchAllRows("partner_credits_history", "*", (q) => 
+        q.eq("partner_store_id", storeId).order("created_at", { ascending: false })
+      );
+      setCreditsHistory(data || []);
+    } catch (error) {
       toast({ title: "Erro ao carregar histórico", variant: "destructive" });
-      return;
     }
-    setCreditsHistory(data || []);
   };
 
   const handleAddCredits = async () => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { todayBrasiliaISO } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,12 +113,11 @@ const Authentications = () => {
   }, []);
 
   const fetchAllCustomerNames = async () => {
-    const { data } = await supabase
-      .from("customers")
-      .select("name")
-      .order("name", { ascending: true });
+    const data = await fetchAllRows("customers", "name", (q) => 
+      q.order("name", { ascending: true })
+    );
     if (data) {
-      setAllCustomerNames(data.map((c) => c.name));
+      setAllCustomerNames(data.map((c: any) => c.name));
     }
   };
 
@@ -134,12 +134,10 @@ const Authentications = () => {
 
   const fetchAuthentications = async () => {
     try {
-      const { data, error } = await supabase
-        .from("authentications")
-        .select("*")
-        .order("code", { ascending: false });
+      const data = await fetchAllRows("authentications", "*", (q) => 
+        q.order("code", { ascending: false })
+      );
 
-      if (error) throw error;
       setAuthentications(data || []);
     } catch (error: any) {
       toast({
@@ -416,12 +414,11 @@ const Authentications = () => {
     if (oldNum === newNum || oldNum === 0 || newNum === 0) return;
     
     // Get all authentications that need to be updated
-    const { data: allAuths } = await supabase
-      .from("authentications")
-      .select("id, code")
-      .order("code", { ascending: true });
+    const allAuths = await fetchAllRows("authentications", "id, code", (q) => 
+      q.order("code", { ascending: true })
+    );
     
-    if (!allAuths) return;
+    if (!allAuths || allAuths.length === 0) return;
     
     const diff = newNum - oldNum;
     

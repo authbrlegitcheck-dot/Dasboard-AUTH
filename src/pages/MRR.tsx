@@ -9,6 +9,7 @@ import {
   daysInMonth,
   dateKeyBrasilia,
 } from "@/lib/dateUtils";
+import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import { Card } from "@/components/ui/card";
 import MetricCard from "@/components/MetricCard";
@@ -62,18 +63,10 @@ const MRR = () => {
 
   const fetchMRRData = async () => {
     try {
-      const [{ data: authentications }, { data: investments }, { data: caData }] = await Promise.all([
-        supabase
-          .from("authentications")
-          .select("*")
-          .order("date", { ascending: true }),
-        supabase
-          .from("investments")
-          .select("*"),
-        supabase
-          .from("ca_purchases")
-          .select("*, ca_packages(name, credits, price)")
-          .order("purchase_date", { ascending: true }),
+      const [authentications, investments, caData] = await Promise.all([
+        fetchAllRows("authentications", "*", (q) => q.order("date", { ascending: true })),
+        fetchAllRows("investments", "*"),
+        fetchAllRows("ca_purchases", "*, ca_packages(name, credits, price)", (q) => q.order("purchase_date", { ascending: true })),
       ]);
 
       setCaPurchases(caData || []);
