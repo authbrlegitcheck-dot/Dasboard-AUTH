@@ -219,34 +219,31 @@ const [editingPurchase, setEditingPurchase] = useState<CAPurchase | null>(null);
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-    setCustomers(data || []);
   };
 
   const fetchPurchases = async () => {
     try {
       const purchasesData = await fetchAllRows("ca_purchases", "*", (q) => q.order("purchase_date", { ascending: false }));
+
+      // Fetch related data
+      const customersData = await fetchAllRows("customers", "id, name, ca_balance");
+      const packagesData = await fetchAllRows("ca_packages", "*");
+
+      const enrichedPurchases = (purchasesData || []).map((purchase) => ({
+        ...purchase,
+        customer: customersData?.find((c) => c.id === purchase.customer_id),
+        package: packagesData?.find((p) => p.id === purchase.package_id),
+      }));
+
+      setPurchases(enrichedPurchases);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar compras",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    // Fetch related data
-    const customersData = await fetchAllRows("customers", "id, name, ca_balance");
-    const packagesData = await fetchAllRows("ca_packages", "*");
-
-    const enrichedPurchases = (purchasesData || []).map((purchase) => ({
-      ...purchase,
-      customer: customersData?.find((c) => c.id === purchase.customer_id),
-      package: packagesData?.find((p) => p.id === purchase.package_id),
-    }));
-
-    setPurchases(enrichedPurchases);
   };
 
   const fetchTransactions = async () => {
