@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { currentMonthBrasilia, formatDateBrasiliaOptions, dateKeyBrasilia } from "@/lib/dateUtils";
 import { fetchAllRows } from "@/lib/supabaseUtils";
 import DashboardHeader from "@/components/DashboardHeader";
 import { RetentionCohort } from "@/components/RetentionCohort";
@@ -32,20 +31,12 @@ import * as z from "zod";
 import {
   Plus,
   Users,
-  DollarSign,
-  ShieldCheck,
   Eye,
   Edit,
   Trash2,
   Instagram,
   Mail,
   Phone,
-  Receipt,
-  TrendingUp,
-  Wallet,
-  Calendar,
-  Percent,
-  Activity,
   Search,
   X,
 } from "lucide-react";
@@ -112,12 +103,7 @@ interface CustomerWithMetrics extends Customer {
   abc_class: 'A' | 'B' | 'C';
 }
 
-interface MonthlyNetRevenue {
-  month: string;
-  revenue: number;
-  costs: number;
-  netRevenue: number;
-}
+
 
 const CRM = () => {
   const navigate = useNavigate();
@@ -131,12 +117,7 @@ const CRM = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [totalInvestments, setTotalInvestments] = useState(0);
-  const [totalMarketingInvestments, setTotalMarketingInvestments] = useState(0);
-  const [currentMonthInvestments, setCurrentMonthInvestments] = useState(0);
-  const [monthlyNetRevenue, setMonthlyNetRevenue] = useState<MonthlyNetRevenue | null>(null);
-  const [totalAuthenticationsCount, setTotalAuthenticationsCount] = useState(0);
-  const [totalRevenueFromAuth, setTotalRevenueFromAuth] = useState(0);
+
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
@@ -168,31 +149,9 @@ const CRM = () => {
     }
 
     await syncCustomersFromAuthentications();
-    await fetchInvestments();
     fetchCustomers();
   };
 
-  const fetchInvestments = async () => {
-    try {
-      const investmentsData = await fetchAllRows("investments", "amount, date, category");
-
-      const total = investmentsData?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      const marketingTotal = investmentsData
-        ?.filter(inv => inv.category === "Marketing")
-        .reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-      
-      setTotalInvestments(total);
-      setTotalMarketingInvestments(marketingTotal);
-
-      // Current month investments
-      const currentMonth = currentMonthBrasilia();
-      const monthlyInv = investmentsData?.filter(inv => inv.date.startsWith(currentMonth)) || [];
-      const monthlyTotal = monthlyInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
-      setCurrentMonthInvestments(monthlyTotal);
-    } catch (error: any) {
-      console.error("Error fetching investments:", error);
-    }
-  };
 
   const syncCustomersFromAuthentications = async () => {
     try {
@@ -227,10 +186,6 @@ const CRM = () => {
       const customersData = await fetchAllRows("customers", "*", (q) => q.order("created_at", { ascending: false }));
 
       const authenticationsData = await fetchAllRows("authentications", "*");
-
-      // Set total authentications count and revenue directly from the database (same as Index.tsx)
-      setTotalAuthenticationsCount(authenticationsData?.length || 0);
-      setTotalRevenueFromAuth(authenticationsData?.reduce((sum, auth) => sum + Number(auth.price), 0) || 0);
 
       const customersWithMetrics = customersData?.map((customer) => {
         // Match by customer_id OR by requester_name
@@ -295,25 +250,6 @@ const CRM = () => {
       });
 
       setCustomers(customersWithABC);
-      
-      // Calculate current month revenue
-      const currentMonth = currentMonthBrasilia();
-      const currentMonthAuths =
-        authenticationsData?.filter((auth) => dateKeyBrasilia(auth.date).startsWith(currentMonth)) || [];
-      const currentMonthRev = currentMonthAuths.reduce((sum, auth) => sum + Number(auth.price), 0);
-      
-      // Fetch current month investments
-      const investmentsData = await fetchAllRows("investments", "amount, date, category");
-      
-      const monthlyInv = investmentsData?.filter(inv => inv.date.startsWith(currentMonth)) || [];
-      const monthlyInvTotal = monthlyInv.reduce((sum, inv) => sum + Number(inv.amount), 0);
-      
-      setMonthlyNetRevenue({
-        month: currentMonth,
-        revenue: currentMonthRev,
-        costs: monthlyInvTotal,
-        netRevenue: currentMonthRev - monthlyInvTotal,
-      });
     } catch (error: any) {
       toast({
         title: "Erro ao carregar clientes",
@@ -456,26 +392,6 @@ const CRM = () => {
     : customers;
 
   const totalCustomers = customers.length;
-  // Use the totals from database directly (same as Index.tsx)
-  const totalRevenue = totalRevenueFromAuth;
-  const totalAuths = totalAuthenticationsCount;
-  const averageLTV = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
-  
-  // Only consider 'Marketing' category for CAC as per user request
-  const CAC = totalCustomers > 0 ? totalMarketingInvestments / totalCustomers : 0;
-  const LtvCacRatio = CAC > 0 ? (averageLTV / CAC) : 0;
-  
-  // Net Revenue calculations
-  const totalNetRevenue = totalRevenue - totalInvestments;
-  const monthlyNetRev = monthlyNetRevenue?.netRevenue || 0;
-  const monthlyGrossRev = monthlyNetRevenue?.revenue || 0;
-  
-  // Profit margin calculations
-  const totalProfitMargin = totalRevenue > 0 ? (totalNetRevenue / totalRevenue) * 100 : 0;
-  const monthlyProfitMargin = monthlyGrossRev > 0 ? (monthlyNetRev / monthlyGrossRev) * 100 : 0;
-  
-  // Current month label
-  const currentMonthLabel = formatDateBrasiliaOptions(new Date(), { month: 'long', year: 'numeric' });
 
   if (loading) {
     return (
@@ -585,7 +501,7 @@ const CRM = () => {
         </div>
 
         {/* Métricas do CRM */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 border-border bg-card/50">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-muted">
@@ -594,181 +510,6 @@ const CRM = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Total de Clientes</p>
                 <p className="text-2xl font-bold text-foreground">{totalCustomers}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-border bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
-                <DollarSign className="h-6 w-6 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Receita Bruta Total</p>
-                <p className="text-2xl font-bold text-foreground">
-                  R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-border bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
-                <ShieldCheck className="h-6 w-6 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Autenticações</p>
-                <p className="text-2xl font-bold text-foreground">{totalAuths}</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Métricas de Faturamento Líquido */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 border-success/20 bg-gradient-to-br from-card to-success/10">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-success/20">
-                <Wallet className="h-6 w-6 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Faturamento Líquido Total</p>
-                <p className={`text-2xl font-bold ${totalNetRevenue >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  R$ {totalNetRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Receita - Investimentos
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-primary/20 bg-gradient-to-br from-card to-primary/10">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/20">
-                <Calendar className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Fat. Líquido do Mês</p>
-                <p className={`text-2xl font-bold ${(monthlyNetRevenue?.netRevenue || 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                  R$ {(monthlyNetRevenue?.netRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {currentMonthLabel}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-destructive/20 bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-destructive/10">
-                <Receipt className="h-6 w-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Investimentos Totais</p>
-                <p className="text-2xl font-bold text-destructive">
-                  R$ {totalInvestments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Métricas de Health e Aquisição */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 border-border bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
-                <TrendingUp className="h-6 w-6 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">LTV Médio</p>
-                <p className="text-2xl font-bold text-foreground">
-                  R$ {averageLTV.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-border bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
-                <DollarSign className="h-6 w-6 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">CAC Médio (Marketing)</p>
-                <p className="text-2xl font-bold text-foreground">
-                  R$ {CAC.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Investimentos em Marketing / Clientes</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className={`p-6 border-${LtvCacRatio >= 3 ? 'success' : LtvCacRatio >= 1 ? 'amber-500' : 'destructive'}/20 bg-card/50`}>
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-lg bg-${LtvCacRatio >= 3 ? 'success' : LtvCacRatio >= 1 ? 'amber-500' : 'destructive'}/10`}>
-                <Activity className={`h-6 w-6 text-${LtvCacRatio >= 3 ? 'success' : LtvCacRatio >= 1 ? 'amber-500' : 'destructive'}`} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Proporção LTV / CAC (Mkt)</p>
-                <p className={`text-2xl font-bold text-${LtvCacRatio >= 3 ? 'success' : LtvCacRatio >= 1 ? 'amber-500' : 'destructive'}`}>
-                  {LtvCacRatio.toFixed(1)}x
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Ideal é &ge; 3.0x</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-destructive/20 bg-card/50">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-destructive/10">
-                <Receipt className="h-6 w-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Investimentos Totais</p>
-                <p className="text-2xl font-bold text-destructive">
-                  R$ {totalInvestments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Métricas de Margem de Lucro */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="p-6 border-primary/20 bg-gradient-to-br from-card to-primary/5">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/20">
-                <Percent className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Margem de Lucro Total</p>
-                <p className={`text-2xl font-bold ${totalProfitMargin >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                  {totalProfitMargin.toFixed(1)}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  fat. líquido / receita bruta
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-border bg-gradient-to-br from-card to-muted/30">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
-                <Percent className="h-6 w-6 text-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Margem de Lucro (Mês)</p>
-                <p className={`text-2xl font-bold ${monthlyProfitMargin >= 0 ? 'text-foreground' : 'text-destructive'}`}>
-                  {monthlyProfitMargin.toFixed(1)}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {currentMonthLabel}
-                </p>
               </div>
             </div>
           </Card>
