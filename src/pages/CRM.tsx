@@ -37,7 +37,6 @@ import {
   Instagram,
   Mail,
   Phone,
-  Receipt,
   Search,
   X,
 } from "lucide-react";
@@ -221,13 +220,10 @@ const CRM = () => {
         };
       }) || [];
 
-      // Ordenar por Total Gasto (decrescente) e depois por número de autenticações (decrescente)
-      const sortedCustomers = customersWithMetrics.sort((a, b) => {
-        if (b.total_spent !== a.total_spent) {
-          return b.total_spent - a.total_spent;
-        }
-        return b.total_authentications - a.total_authentications;
-      });
+      // Ordenar alfabeticamente pelo nome
+      const sortedCustomers = customersWithMetrics.sort((a, b) => 
+        a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+      );
 
       // Calcular Curva ABC baseada no faturamento total de autenticações
       const totalRev = authenticationsData?.reduce((sum, auth) => sum + Number(auth.price), 0) || 0;
@@ -557,17 +553,13 @@ const CRM = () => {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Contato</TableHead>
-                    <TableHead className="text-right">Autenticações</TableHead>
-                    <TableHead className="text-right">Total Gasto (LTV)</TableHead>
-                    <TableHead className="text-right">Ticket Médio</TableHead>
-                    <TableHead className="text-center">Curva ABC</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                         Nenhum cliente encontrado para "{searchQuery}".
                       </TableCell>
                     </TableRow>
@@ -603,29 +595,6 @@ const CRM = () => {
                               <span>{customer.instagram}</span>
                             </div>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">{customer.total_authentications}</TableCell>
-                      <TableCell className="text-right">
-                        R$ {customer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className={`inline-flex items-center justify-center font-bold text-xs h-6 w-6 rounded-md ${
-                          customer.abc_class === 'A' ? 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/30' :
-                          customer.abc_class === 'B' ? 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800' :
-                          'bg-zinc-100 text-zinc-500 border border-zinc-200 dark:bg-zinc-800/50'
-                        }`}>
-                          {customer.abc_class}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Receipt className="h-3.5 w-3.5 text-foreground" />
-                          <span>
-                            R$ {customer.total_authentications > 0 
-                              ? (customer.total_spent / customer.total_authentications).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                              : '0,00'}
-                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -809,20 +778,7 @@ const CRM = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="p-4 border-border">
-                  <p className="text-sm text-muted-foreground">Total Gasto</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    R$ {selectedCustomer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </Card>
-                <Card className="p-4 border-border">
-                  <p className="text-sm text-muted-foreground">Autenticações</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {selectedCustomer.total_authentications}
-                  </p>
-                </Card>
-              </div>
+
 
               <div>
                 <h4 className="font-semibold mb-3">Histórico de Autenticações</h4>
@@ -841,9 +797,6 @@ const CRM = () => {
                           <div className="text-right">
                             <p className={`font-semibold ${auth.result === 'AUTH' ? 'text-green-500' : 'text-red-500'}`}>
                               {auth.result}
-                            </p>
-                            <p className="text-sm text-foreground">
-                              R$ {Number(auth.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                           </div>
                         </div>
