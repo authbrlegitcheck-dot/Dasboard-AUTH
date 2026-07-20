@@ -37,6 +37,7 @@ import {
   Instagram,
   Mail,
   Phone,
+  Receipt,
   Search,
   X,
 } from "lucide-react";
