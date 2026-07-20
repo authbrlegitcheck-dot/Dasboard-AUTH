@@ -220,10 +220,8 @@ const CRM = () => {
         };
       }) || [];
 
-      // Ordenar alfabeticamente pelo nome
-      const sortedCustomers = customersWithMetrics.sort((a, b) => 
-        a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
-      );
+      // Ordenar por LTV (total_spent) decrescente
+      const sortedCustomers = customersWithMetrics.sort((a, b) => b.total_spent - a.total_spent);
 
       // Calcular Curva ABC baseada no faturamento total de autenticações
       const totalRev = authenticationsData?.reduce((sum, auth) => sum + Number(auth.price), 0) || 0;
@@ -567,7 +565,12 @@ const CRM = () => {
                     <TableRow key={customer.id}>
                       <TableCell className="font-medium align-top pt-4">
                         <div className="flex flex-col gap-1.5">
-                          <span>{customer.name}</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{customer.name}</span>
+                            <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border">
+                              R$ {customer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
                           {customer.is_churn_risk && (
                             <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold bg-destructive/10 text-destructive border-destructive/20 w-fit tracking-wide uppercase">
                               Risco de Churn (Inativo)
