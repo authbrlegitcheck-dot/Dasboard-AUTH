@@ -46,6 +46,8 @@ import {
   Calendar,
   Percent,
   Activity,
+  Search,
+  X,
 } from "lucide-react";
 import {
   Table,
@@ -122,6 +124,7 @@ const CRM = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<CustomerWithMetrics[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithMetrics | null>(null);
   const [customerHistory, setCustomerHistory] = useState<any[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -439,6 +442,18 @@ const CRM = () => {
     });
     setIsEditDialogOpen(true);
   };
+
+  const filteredCustomers = searchQuery.trim()
+    ? customers.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(q) ||
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.phone && c.phone.toLowerCase().includes(q)) ||
+          (c.instagram && c.instagram.toLowerCase().includes(q))
+        );
+      })
+    : customers;
 
   const totalCustomers = customers.length;
   // Use the totals from database directly (same as Index.tsx)
@@ -766,7 +781,34 @@ const CRM = () => {
         {/* Tabela de Clientes */}
         <Card className="border-border bg-card/50">
           <div className="p-6">
-            <h3 className="text-xl font-bold text-foreground mb-4">Lista de Clientes</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <h3 className="text-xl font-bold text-foreground">
+                Lista de Clientes
+                {searchQuery.trim() && (
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    {filteredCustomers.length} resultado{filteredCustomers.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </h3>
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, email, telefone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-9 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -781,7 +823,13 @@ const CRM = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.map((customer) => (
+                  {filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Nenhum cliente encontrado para "{searchQuery}".
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCustomers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell className="font-medium align-top pt-4">
                         <div className="flex flex-col gap-1.5">
