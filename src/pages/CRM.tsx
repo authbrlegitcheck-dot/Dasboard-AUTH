@@ -31,6 +31,7 @@ import * as z from "zod";
 import {
   Plus,
   Users,
+  UserCheck,
   Eye,
   Edit,
   Trash2,
@@ -387,6 +388,7 @@ const CRM = () => {
     : customers;
 
   const totalCustomers = customers.length;
+  const activeCustomersCount = customers.filter((c) => !c.is_churn_risk).length;
 
   if (loading) {
     return (
@@ -496,7 +498,7 @@ const CRM = () => {
         </div>
 
         {/* Métricas do CRM */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 border-border bg-card/50">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-lg bg-muted">
@@ -505,6 +507,18 @@ const CRM = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Total de Clientes</p>
                 <p className="text-2xl font-bold text-foreground">{totalCustomers}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 border-border bg-card/50">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-emerald-500/10">
+                <UserCheck className="h-6 w-6 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Clientes Ativos</p>
+                <p className="text-2xl font-bold text-emerald-500">{activeCustomersCount}</p>
               </div>
             </div>
           </Card>
