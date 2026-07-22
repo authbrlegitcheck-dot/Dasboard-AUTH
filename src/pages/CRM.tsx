@@ -566,9 +566,9 @@ const CRM = () => {
                       <TableCell className="font-medium align-top pt-4">
                         <div className="flex flex-col gap-1.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span>{customer.name}</span>
-                            <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border">
-                              R$ {customer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            <span className="font-semibold text-foreground">{customer.name}</span>
+                            <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                              LTV: R$ {customer.total_spent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                           {customer.is_churn_risk && (
